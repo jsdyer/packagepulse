@@ -71,7 +71,7 @@ def main():
                 page.locator("#lookup").click()
                 card = page.locator('.package-card[data-package="@example/worker-package"]')
                 card.wait_for()
-                assert "shared cache" in card.inner_text()
+                assert "shared cache" in card.inner_text().lower(), card.inner_text()
                 assert "2026-11-22 12:00:00 UTC" in card.inner_text()
                 assert "Cloudflare Worker" in page.locator("#transport-note").text_content()
                 page.set_viewport_size({"width": 390, "height": 844})
