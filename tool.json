@@ -17,6 +17,7 @@
   "access": "browser",
   "data_info": {
     "mode": "mixed",
-    "detail": "Live public npm metadata and jsDelivr CDN usage, with dated default captures for immediate exploration."
+    "detail": "Live public npm metadata and jsDelivr CDN usage, with dated default captures for immediate exploration.",
+    "cadence": "Weekly"
   }
 }
