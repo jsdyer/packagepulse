@@ -1,0 +1,9 @@
+{
+  "defaultPackages": ["vue", "preact"],
+  "examplePackages": ["vue", "preact", "@sveltejs/kit", "express", "vite", "typescript"],
+  "statsPeriod": "month",
+  "requestTimeoutMs": 30000,
+  "maxResponseBytes": 40000000,
+  "releasePageSize": 30,
+  "timelineMonths": 18
+}

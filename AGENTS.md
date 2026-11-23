@@ -26,3 +26,5 @@
   the extra practical detail in the hub README. Only the short source sentence
   belongs in the homepage record. Import the note with `scripts/sync_guides.py
   --tool TOOL_ID` in the hub before regenerating its README.
+
+- Keep defaults and request limits in `web/config.json`; defaults are conveniences, not the allowed package list. Derive displayed counts from actual records. Preserve arbitrary public/scoped package lookup and an expansion test. Document config changes and refresh/publish steps under README “Expand or customize”.

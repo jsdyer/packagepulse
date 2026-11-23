@@ -1,21 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cleanLines } from '../web/model.mjs';
-test('trims, removes blanks and preserves first-seen order', () => {
-  assert.deepEqual(cleanLines('  Halifax\nLangley\nHalifax\n\nVancouver  '), {
-    text: 'Halifax\nLangley\nVancouver', count: 3, removed: 1,
-  });
-});
-test('supports Windows and old Mac line endings', () => {
-  assert.equal(cleanLines('a\r\nb\ra').text, 'a\nb');
-});
-test('empty text and whitespace produce an empty result', () => {
-  assert.deepEqual(cleanLines(' \n\t'), { text: '', count: 0, removed: 0 });
-});
-test('preserves case and Unicode', () => {
-  assert.equal(cleanLines('Québec\nquébec\n東京\nQuébec').text, 'Québec\nquébec\n東京');
-});
-test('treats markup as ordinary text', () => {
-  assert.equal(cleanLines('<script>alert(1)</script>\n<script>alert(1)</script>').text, '<script>alert(1)</script>');
-});
-test('rejects non-text input', () => { assert.throws(() => cleanLines(null), TypeError); });
+import fs from 'node:fs';
+import {packageName,registryURL,statsURL,normalizePackage,normalizeStats,latestRelease,ageDays,releaseBuckets,filteredReleases,dependencyDifference,releasesCSV,validateConfig,safeURL} from '../web/model.mjs';
+const raw={name:'another-package',description:'<script>not markup</script>',maintainers:[{name:'a',email:'private@example.test'},{name:'a'}],time:{created:'2020-01-01T00:00:00Z','1.0.0':'2026-01-01T00:00:00Z','2.0.0-beta.1':'2026-02-01T00:00:00Z'},'dist-tags':{latest:'1.0.0',next:'2.0.0-beta.1'},versions:{'1.0.0':{dependencies:{foo:'^1'},license:'MIT'},'2.0.0-beta.1':{dependencies:{foo:'^2',bar:'1'},deprecated:'=sum(1,2)'},'0.9.0':{}}};
+const pkg=normalizePackage(raw,'another-package','2026-02-02T00:00:00Z');
+test('any valid public or scoped package works without membership in defaults',()=>{assert.equal(packageName(' new-package '),'new-package');assert.equal(packageName('@my.scope/new-package'),'@my.scope/new-package');assert.equal(registryURL('@my.scope/new-package'),'https://registry.npmjs.org/%40my.scope%2Fnew-package');assert.ok(statsURL('@my.scope/new-package').includes('%40my.scope/new-package'));for(const value of ['https://registry.npmjs.org/vue','../vue','vue@1','@scope','has space',''])assert.throws(()=>packageName(value));});
+test('normalizes every version and derives latest from tag, not publication ordering',()=>{assert.equal(pkg.versions.length,3);assert.equal(pkg.versions[0].version,'2.0.0-beta.1');assert.equal(latestRelease(pkg).version,'1.0.0');assert.equal(pkg.versions.at(-1).publishedAt,null);assert.deepEqual(pkg.maintainers,['a']);assert.equal(JSON.stringify(pkg).includes('private@example'),false);assert.equal(pkg.description,raw.description);});
+test('rejects wrong package identity or missing version records',()=>{assert.throws(()=>normalizePackage(raw,'vue'));assert.throws(()=>normalizePackage({...raw,versions:{}},raw.name));});
+test('timeline separates prereleases and preserves empty months',()=>{const buckets=releaseBuckets(pkg,3,Date.parse('2026-03-12'));assert.deepEqual(buckets,[{month:'2026-01',stable:1,prerelease:0},{month:'2026-02',stable:0,prerelease:1},{month:'2026-03',stable:0,prerelease:0}]);assert.equal(filteredReleases(pkg,'2.','prerelease').length,1);assert.equal(filteredReleases(pkg,'','stable').length,2);});
+test('unknown dates stay unknown and future timestamps do not produce negative age',()=>{assert.equal(ageDays(null),null);assert.equal(ageDays('2026-01-01',Date.parse('2026-01-11')),10);assert.equal(ageDays('2027-01-01',Date.parse('2026-01-01')),0);});
+test('dependency comparison preserves version ranges and missing sides',()=>{assert.deepEqual(dependencyDifference(pkg.versions.find(v=>v.version==='1.0.0'),pkg.versions[0]),[{name:'bar',a:null,b:'1'},{name:'foo',a:'^1',b:'^2'}]);});
+test('stats distinguish actual zero from a missing report and sort source dates',()=>{assert.throws(()=>normalizeStats({},'vue'));const zero=normalizeStats({hits:{total:0,dates:{'2026-02-02':0,'2026-02-01':0}}},'vue');assert.equal(zero.hits,0);assert.equal(zero.from,'2026-02-01');assert.equal(zero.through,'2026-02-02');});
+test('export contains every version and protects formula-like cells',()=>{const csv=releasesCSV([pkg]);assert.equal(csv.split('\r\n').length,4);assert.ok(csv.includes("'=sum(1,2)"));assert.ok(csv.includes('another-package'));});
+test('untrusted URLs cannot become active script links',()=>{assert.equal(safeURL('javascript:alert(1)'),null);assert.equal(safeURL('https://user:password@example.com'),null);assert.equal(safeURL('https://example.com'),'https://example.com/');});
+test('editable defaults and expanded shortcut lists pass without exact-count assumptions',()=>{const config=JSON.parse(fs.readFileSync(new URL('../web/config.json',import.meta.url)));const expanded={...config,defaultPackages:['another-package','@scope/test'],examplePackages:Array.from({length:40},(_,n)=>`package-${n}`)};assert.equal(validateConfig(expanded).examplePackages.length,40);assert.throws(()=>validateConfig({...config,releasePageSize:0}));});
+test('real retained captures have complete version and source metadata',()=>{const data=JSON.parse(fs.readFileSync(new URL('../web/data/defaults.json',import.meta.url)));assert.ok(data.packages.length>0);for(const {pkg,stats}of data.packages){assert.ok(pkg.versions.length>0);assert.equal(pkg.source,registryURL(pkg.name));assert.ok(pkg.capturedAt);if(stats)assert.ok(stats.hits>=0);}});
