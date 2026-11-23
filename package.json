@@ -1,0 +1,12 @@
+{
+  "name": "coolcode-packagepulse",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python3 scripts/build_worker.py",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "devDependencies": { "wrangler": "4.166.0" }
+}

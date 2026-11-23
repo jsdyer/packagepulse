@@ -65,8 +65,14 @@ Both services support cross-origin browser requests. API availability and upstre
 
 The initial view reads files from CoolCode only. **Look up live** sends public package names, your IP address and ordinary request metadata to npm and jsDelivr. Do not enter private package names if you do not want those names sent. There is no account, API secret, local storage, saved watchlist or background polling. Results live in tab memory unless you choose to download them. CoolCode’s shared counter records aggregate opens separately; package inputs are not sent to that counter.
 
+## Optional Cloudflare Worker
+
+[Follow the Workers setup guide](docs/cloudflare-workers.md) to deploy a second copy, for example at `packages.hackme.ca`, with a same-origin API and shared 15-minute cache. No key or database is needed. The existing GitHub Pages deployment remains a direct browser app.
+
+The Worker only retrieves npm package metadata and jsDelivr statistics; it cannot proxy arbitrary URLs or run package code. Cached results preserve their provider retrieval timestamps and are labeled **Provider lookup · shared cache**. For this deployment, names are sent to Cloudflare, which contacts the providers on cache misses. Cloudflare diagnostics may retain public package request URLs. The guide explains cache/resource settings, exact dashboard fields, domain setup, tests and troubleshooting.
+
 ## Development
 
 Source is in `web/`, pure transformations in `web/model.mjs`, the collector in `scripts/refresh.mjs`. The standard-library Python builder copies static assets and injects reviewed metadata and shared reporting links. `dist/` is generated and ignored.
 
-Run the three check commands above. GitHub Actions additionally runs `tests/browser_smoke.py` in Chromium with deterministic mocked live APIs, exercises a package outside the configured defaults, exports CSV, checks text rendering and verifies a 390px viewport. Browser tests are test-only dependencies. Production has no dependency installation and no framework.
+Run the three check commands above. GitHub Actions additionally runs `tests/browser_smoke.py` in Chromium with deterministic mocked live APIs, exercises a package outside the configured defaults, exports CSV, checks text rendering and verifies a 390px viewport. Browser tests are test-only dependencies. The browser app has no framework or runtime dependency installation. The optional Worker uses pinned Wrangler build tooling; `npm run build` creates its separate ignored `dist-worker/` output.

@@ -6,6 +6,13 @@ export function packageName(value) {
 }
 export function registryURL(name) { return `https://registry.npmjs.org/${encodeURIComponent(packageName(name))}`; }
 export function statsURL(name, period = 'month') { return `https://data.jsdelivr.com/v1/stats/packages/npm/${packageName(name).split('/').map(encodeURIComponent).join('/')}?period=${encodeURIComponent(period)}`; }
+export function lookupURL(kind, name, period = 'month', apiBase = null) {
+  if (!apiBase) return kind === 'package' ? registryURL(name) : statsURL(name, period);
+  if (apiBase !== '/api' && !/^https:\/\/[^/?#]+\/api$/.test(apiBase)) throw new Error('apiBase must be null, /api or an HTTPS origin ending in /api.');
+  const params = new URLSearchParams({name:packageName(name)});
+  if (kind === 'stats') params.set('period', period);
+  return `${apiBase}/${kind}?${params}`;
+}
 export function npmURL(name) { return `https://www.npmjs.com/package/${packageName(name).split('/').map(encodeURIComponent).join('/')}`; }
 const text = value => typeof value === 'string' ? value : '';
 const date = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? new Date(value).toISOString() : null;
@@ -58,5 +65,6 @@ export function validateConfig(config) {
   [...config.defaultPackages,...config.examplePackages].forEach(packageName);
   for(const key of ['requestTimeoutMs','maxResponseBytes','releasePageSize','timelineMonths']) if(!Number.isInteger(config[key]) || config[key]<1) throw new Error(`Invalid ${key} in config.json.`);
   if(typeof config.statsPeriod!=='string' || !config.statsPeriod.trim()) throw new Error('Choose a jsDelivr statsPeriod.');
+  if (config.apiBase != null) lookupURL('package','vue',config.statsPeriod,config.apiBase);
   return config;
 }
