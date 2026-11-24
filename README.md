@@ -76,3 +76,11 @@ The Worker only retrieves npm package metadata and jsDelivr statistics; it canno
 Source is in `web/`, pure transformations in `web/model.mjs`, the collector in `scripts/refresh.mjs`. The standard-library Python builder copies static assets and injects reviewed metadata and shared reporting links. `dist/` is generated and ignored.
 
 Run the three check commands above. GitHub Actions additionally runs `tests/browser_smoke.py` in Chromium with deterministic mocked live APIs, exercises a package outside the configured defaults, exports CSV, checks text rendering and verifies a 390px viewport. Browser tests are test-only dependencies. The browser app has no framework or runtime dependency installation. The optional Worker uses pinned Wrangler build tooling; `npm run build` creates its separate ignored `dist-worker/` output.
+
+<!-- schedule-reliability -->
+## Schedule reliability
+
+Public GitHub repositories can have scheduled workflows disabled after 60 days of inactivity. A separate weekly [schedule guard](.github/workflows/schedule-guard.yml) calls GitHub's enable-workflow API for an explicit list of refresh workflows and itself. It can restore workflows disabled for inactivity, preserves manually disabled workflows, and runs independently of collection failures.
+
+This is an interim mitigation, not a scheduling guarantee: GitHub does not document active-workflow renewal as a permanent exemption, and scheduled runs can be delayed or dropped. A scheduler on our own Linux server is the planned independent trigger. The guard does not collect data, create dummy commits, or change source/check timestamps; successful collection and published data freshness still need monitoring.
+<!-- /schedule-reliability -->
