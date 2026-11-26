@@ -60,6 +60,20 @@ def main():
                 with page.expect_download() as info:
                     page.locator("#export-csv").click()
                 assert info.value.suggested_filename.endswith(".csv")
+                page.locator("#watch-name").fill("brand-new-package")
+                page.locator("#watch-installed").fill("0.9.0")
+                page.locator("#watch-form button").click()
+                assert "Newer latest tag available" in page.locator("#watch-rows").inner_text()
+                page.locator("#watch-save").click()
+                page.reload()
+                page.locator(".package-card").first.wait_for()
+                assert "brand-new-package" in page.locator("#watch-rows").inner_text()
+                assert "Not checked" in page.locator("#watch-rows").inner_text()
+                page.locator("#watch-rows button").first.click()
+                page.wait_for_function("document.querySelector('#watch-rows').textContent.includes('Newer latest tag available')")
+                with page.expect_download() as watch_download:page.locator("#watch-export").click()
+                assert watch_download.value.suggested_filename.endswith(".json")
+                assert page.request.get(f"http://127.0.0.1:{server.server_port}/packagepulse/feed.xml").ok
                 # The optional Worker changes transport, not lookup coverage.
                 page.route("**/packagepulse/config.json", lambda route: route.fulfill(status=200, json={**config, "apiBase": "/api"}))
                 page.route("**/api/package?*", npm)

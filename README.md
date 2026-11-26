@@ -4,6 +4,7 @@
 
 <!-- coolcode:guide -->
 Enter any public npm package, optionally add a second, and choose Look up live. The latest publisher tag can differ from the newest release; CDN requests are not npm downloads or unique users.
+Installed-version watchlists are temporary until explicitly saved in this browser; public package checks never send installed versions. The weekly public RSS feed follows configured defaults, not visitors’ private watchlists. Comparisons use exact SemVer precedence and the publisher’s latest tag; ranges remain unclassified.
 <!-- /coolcode:guide -->
 
 ## Use the tool
@@ -63,7 +64,7 @@ Both services support cross-origin browser requests. API availability and upstre
 
 ## Privacy
 
-The initial view reads files from CoolCode only. **Look up live** sends public package names, your IP address and ordinary request metadata to npm and jsDelivr. Do not enter private package names if you do not want those names sent. There is no account, API secret, local storage, saved watchlist or background polling. Results live in tab memory unless you choose to download them. CoolCode’s shared counter records aggregate opens separately; package inputs are not sent to that counter.
+The initial view reads files from CoolCode only. **Look up live** sends public package names, your IP address and ordinary request metadata to npm and jsDelivr. Do not enter private package names if you do not want those names sent. There is no account, API secret or background polling. Results live in tab memory unless you download them. Installed-version watchlists are stored in this browser only after an explicit Save; Forget removes the saved copy. CoolCode’s shared counter records aggregate opens separately; package inputs are not sent to that counter.
 
 ## Optional Cloudflare Worker
 
@@ -84,3 +85,8 @@ Public GitHub repositories can have scheduled workflows disabled after 60 days o
 
 This is an interim mitigation, not a scheduling guarantee: GitHub does not document active-workflow renewal as a permanent exemption, and scheduled runs can be delayed or dropped. A scheduler on our own Linux server is the planned independent trigger. The guard does not collect data, create dummy commits, or change source/check timestamps; successful collection and published data freshness still need monitoring.
 <!-- /schedule-reliability -->
+
+## Installed versions and RSS
+Add any public npm package and its exact installed version to the watchlist, then Check for a deliberate lookup. Save on this browser persists package names and installed versions under `coolcode:packagepulse:watchlist`; observations are temporary. Export/import JSON moves a private list manually. Forget removes the saved copy. A publisher’s latest tag can be behind another published version. Exact SemVer comparisons include prerelease precedence; ranges, tags and non-SemVer strings are left for review.
+
+`feed.xml` is generated offline from the retained default captures and contains the newest 200 dated publication records across `web/config.json.defaultPackages`, with stable GUIDs and original publication dates. It includes prereleases. Its weekly schedule is unchanged. It does not subscribe to a visitor’s watchlist; add desired public packages to the repository defaults to change public feed coverage. No Worker or credentials change is required for Pages.
