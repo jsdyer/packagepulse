@@ -1,7 +1,7 @@
 {
   "id": "packagepulse",
   "title": "Package Pulse",
-  "description": "Inspect npm release histories, maintainers and dependencies, then compare packages with dated CDN usage.",
+  "description": "Compare npm release histories and dependencies, track installed versions, and follow public release feeds.",
   "category": "projects",
   "tags": [
     "npm",
@@ -17,7 +17,7 @@
   "access": "browser",
   "data_info": {
     "mode": "mixed",
-    "detail": "Live public npm metadata and jsDelivr CDN usage, with dated default captures for immediate exploration.",
+    "detail": "Live public npm metadata and jsDelivr CDN usage, with dated default captures, local installed-version watchlists and weekly release RSS.",
     "cadence": "Weekly"
   }
 }
